@@ -1,0 +1,24 @@
+OUT_DIR = "/kaggle/working/"
+
+EPOCHS = 25
+LR = 4.0e-5
+WEIGHT_DECAY = 0.1
+HEAD_DROPOUT = 0.3
+FREEZE_BACKBONE = False
+CLASS_WEIGHTS = [1, 1.5]
+
+BANDS = ['HH', 'HV', 'Green', 'Red', 'NIR', 'SWIR']
+NUM_FRAMES=1
+NUM_WORKERS=4
+
+BACKBONE_NAME =  "prithvi_eo_v2_tiny_tl"
+
+IMG_PATH = ""
+PRED_IMG_PATH = ""
+LABEL_PATH = ""
+SPLIT_PATH_TRAIN = ""
+SPLIT_PATH_TEST = ""
+SPLIT_PATH_VAL = ""
+SPLIT_PATH_PRED = ""
+
+SEED = 0
