@@ -1,1 +1,123 @@
 /.vscode
+*.zip
+# ===========================
+# Python
+# ===========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Compiled extensions
+*.so
+
+# ===========================
+# Virtual Environments
+# ===========================
+venv/
+.venv/
+env/
+ENV/
+
+# ===========================
+# Environment Variables
+# ===========================
+.env
+.env.*
+
+# ===========================
+# Jupyter
+# ===========================
+.ipynb_checkpoints/
+
+# ===========================
+# IDEs
+# ===========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ===========================
+# OS Files
+# ===========================
+.DS_Store
+Thumbs.db
+
+# ===========================
+# Logs
+# ===========================
+*.log
+logs/
+
+# ===========================
+# Pytest / Coverage
+# ===========================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ===========================
+# Type Checkers
+# ===========================
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+
+# ===========================
+# Build Artifacts
+# ===========================
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# ===========================
+# Model Outputs
+# ===========================
+checkpoints/
+weights/
+models/
+runs/
+outputs/
+results/
+wandb/
+lightning_logs/
+tensorboard/
+events.out.tfevents*
+
+# ===========================
+# Dataset
+# ===========================
+data/
+
+# Ignore common data formats
+*.h5
+*.hdf5
+*.ckpt
+*.pth
+*.pt
+*.onnx
+*.pickle
+*.pkl
+*.joblib
+
+# ===========================
+# Caches
+# ===========================
+.cache/
+
+# ===========================
+# Temporary Files
+# ===========================
+*.tmp
+*.temp
+
+# ===========================
+# Local Configs
+# ===========================
+*.local
