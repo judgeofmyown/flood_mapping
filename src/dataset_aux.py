@@ -11,45 +11,52 @@ import rasterio, rasterio.plot
 
 class FDdataset(Dataset):
     """
-    Flood Detection Dataset for loading satellite imagery with optional labels.
+    Flood Detection Dataset for multi-modal geospatial inputs.
 
-    This dataset handles multi-band GeoTIFF images along with optional
-    segmentation masks. It also extracts temporal and spatial metadata
-    from the image files.
+    This dataset loads satellite imagery along with auxiliary data such as
+    DEM (Digital Elevation Model) and LULC (Land Use Land Cover), and
+    optionally corresponding segmentation labels.
 
     Each sample consists of:
         - image: Multi-band satellite image (C, 1, H, W)
+        - aux: Auxiliary channels stacked as (2, H, W) -> [DEM, LULC]
         - temporal_coords: [[year, julian_day]] extracted from filename
         - location_coords: Geographic coordinates (if available)
         - mask (optional): Segmentation label (H, W)
 
     Args:
         img_path (str): Directory containing satellite images.
+        dem_path (str): Directory containing DEM files.
+        lulc_path (str): Directory containing LULC files.
         label_path (str or None): Directory containing label masks.
         files (list): List of base filenames (without suffixes).
         mean (float or np.ndarray): Mean for normalization.
         std (float or np.ndarray): Standard deviation for normalization.
         transforms (callable, optional): Albumentations transforms applied
-            to both image and mask.
-        image_cache (dict, optional): Preloaded cache containing image data,
-            temporal coordinates, and location coordinates to reduce disk I/O.
+            to image and mask.
+        image_cache (dict, optional): Preloaded image cache to avoid disk I/O.
+        dem_cache (dict, optional): Preloaded DEM cache.
+        lulc_cache (dict, optional): Preloaded LULC cache.
+        label_cache (dict, optional): Preloaded label cache.
 
     Notes:
         - Assumes file naming convention:
             <id>_image.tif
+            <id>_dem.tif
+            <id>_lulc.tif
             <id>_label.tif
-        - Image data is expected in (C, H, W) format when read and is reshaped
-          to (C, 1, H, W) before returning.
-        - Albumentations requires input in (H, W, C), so reshaping is applied
-          before and after augmentation.
+        - Missing or no-data values are replaced with a small constant
+          (NO_DATA_FLOAT) before normalization.
         - Temporal information is extracted from filenames using YYYYMMDD format.
-        - No-data values are replaced with a small constant before normalization.
+        - Images are normalized using (img - mean) / std.
 
     Returns:
-        dict: A dictionary containing:
+        dict: A dictionary containing tensors for model input. Keys depend on
+        whether labels are available:
             With labels:
                 {
                     "image": Tensor,
+                    "aux": Tensor,
                     "temporal_coords": Tensor,
                     "location_coords": Tensor,
                     "mask": Tensor
@@ -57,21 +64,29 @@ class FDdataset(Dataset):
             Without labels:
                 {
                     "image": Tensor,
+                    "aux": Tensor,
                     "temporal_coords": Tensor,
                     "location_coords": Tensor
                 }
     """
     def __init__(self, 
                  img_path, 
+                 dem_path,
+                 lulc_path,
                  label_path, 
                  files, 
                  mean, 
                  std, 
                  transforms=None, 
-                 image_cache=None):
+                 image_cache=None,
+                 dem_cache=None,
+                 lulc_cache=None, 
+                 label_cache=None):
         super().__init__()
 
         self.img_path = img_path
+        self.dem_path = dem_path
+        self.lulc_path = lulc_path
         self.label_path = label_path
         self.files = files
         self.mean = mean
@@ -79,15 +94,35 @@ class FDdataset(Dataset):
         self.NO_DATA = np.nan
         self.NO_DATA_FLOAT = 0.00001
         self.transforms = transforms
-        self.image_cache = image_cache    
+        self.image_cache = image_cache
+        self.dem_cache = dem_cache
+        self.lulc_cache = lulc_cache
+        self.label_cache = label_cache
+        
     
     def __len__(self):
         return len(self.files)
     
     def __getitem__(self, idx):
+        
         img_file_name = self.files[idx] + '_image.tif'
+
+        dem_file_name = img_file_name.replace('.tif', '_dem.tif')
+        lulc_file_name = img_file_name.replace('.tif', '_lulc.tif')
+
         img_file_path = os.path.join(self.img_path, img_file_name)
+        dem_file_path = os.path.join(self.dem_path, dem_file_name)
+        lulc_file_path = os.path.join(self.lulc_path, lulc_file_name)
+
         # img, temporal_coords, location_coords, meta = self.load_data(img_file_path, None)
+        if self.dem_cache is not None:
+            dem = self.dem_cache[dem_file_name]["data"]
+        
+        if self.lulc_cache is not None:
+            lulc = self.lulc_cache[lulc_file_name]["data"]
+
+        aux = np.stack([dem, lulc], axis=0) # (2, H, W)
+
         if self.image_cache is not None:
             cached = self.image_cache[img_file_name]
             img = cached["img"]
@@ -123,6 +158,7 @@ class FDdataset(Dataset):
 
             return {
                 "image": img,
+                "aux": torch.tensor(aux, dtype=torch.float32),
                 "temporal_coords": torch.tensor(temporal_coords, dtype=torch.float32),
                 "location_coords": torch.tensor(location_coords, dtype=torch.float32),
                 "mask": torch.tensor(label_img, dtype=torch.long)
@@ -130,6 +166,7 @@ class FDdataset(Dataset):
         else:
             return {
                 "image": img,
+                "aux":torch.tensor(aux, dtype=torch.float32),
                 "temporal_coords": torch.tensor(temporal_coords, dtype=torch.float32),
                 "location_coords": torch.tensor(location_coords, dtype=torch.float32)
             }

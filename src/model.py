@@ -1,3 +1,7 @@
+"""
+terratorch version
+"""
+
 import matplotlib.pyplot as plt
 from terratorch.tasks import SemanticSegmentationTask
 import numpy as np
@@ -11,7 +15,7 @@ import rasterio, rasterio.plot
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from configs.config import NUM_WORKERS, BANDS, NUM_FRAMES, HEAD_DROPOUT, LR, WEIGHT_DECAY, CLASS_WEIGHTS, BACKBONE_NAME
-
+  
 
 
 backbone_args = dict(
