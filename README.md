@@ -1,6 +1,7 @@
 
 
-
+The data should be structerd as below
+```text
 data/
 ├── images/
 │   ├── xxx_image.tif
@@ -10,3 +11,4 @@ data/
 │   ├── train.txt
 │   ├── val.txt
 │   ├── test.txt
+```
